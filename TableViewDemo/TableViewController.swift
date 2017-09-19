@@ -143,6 +143,34 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
+    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        let sectionItems = allItems[indexPath.section]
+        if indexPath.row >= sectionItems.count && isEditing {
+            return false
+        }
+        return true
+    }
+    
+    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        let itemToMove = allItems[sourceIndexPath.section][sourceIndexPath.row]
+        
+        allItems[sourceIndexPath.section].remove(at: sourceIndexPath.row)
+        
+        if sourceIndexPath.section == destinationIndexPath.section {
+            allItems[sourceIndexPath.section].insert(itemToMove, at: destinationIndexPath.row)
+        } else {
+            allItems[destinationIndexPath.section].insert(itemToMove, at: destinationIndexPath.row)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, targetIndexPathForMoveFromRowAt sourceIndexPath: IndexPath, toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath {
+        let sectionItems = allItems[proposedDestinationIndexPath.section]
+        if proposedDestinationIndexPath.row >= sectionItems.count {
+            return IndexPath(row: sectionItems.count - 1, section: proposedDestinationIndexPath.section)
+        }
+        return proposedDestinationIndexPath
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
