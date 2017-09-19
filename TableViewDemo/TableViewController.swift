@@ -20,6 +20,7 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
         super.viewDidLoad()
         automaticallyAdjustsScrollViewInsets = false
         self.navigationItem.title = "Nature Pictures"
+        navigationItem.rightBarButtonItem = editButtonItem
         
         for i in 1...12 {
             if i > 9 {
@@ -43,7 +44,9 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return allItems[section].count
+        let addedRow = isEditing ? 1 : 0
+        
+        return allItems[section].count + addedRow
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -52,15 +55,22 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        let item = allItems[indexPath.section][indexPath.row]
         
-        cell.textLabel?.text = item.title
-        cell.detailTextLabel?.text = item.subtitle
-        
-        if let imageView = cell.imageView, let itemImage = item.image {
-            imageView.image = itemImage
-        } else {
+        if indexPath.row >= allItems[indexPath.section].count && isEditing {
+            cell.textLabel?.text = "Add New Item"
+            cell.detailTextLabel?.text = nil
             cell.imageView?.image = nil
+        } else {
+            let item = allItems[indexPath.section][indexPath.row]
+            
+            cell.textLabel?.text = item.title
+            cell.detailTextLabel?.text = item.subtitle
+            
+            if let imageView = cell.imageView, let itemImage = item.image {
+                imageView.image = itemImage
+            } else {
+                cell.imageView?.image = nil
+            }
         }
         
         return cell
@@ -74,6 +84,41 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
         if editingStyle == .delete {
             allItems[indexPath.section].remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
+        }
+    }
+    
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        
+        if editing {
+            tableView.beginUpdates()
+            
+            for (index, sectionItems) in allItems.enumerated() {
+                let indexPath = IndexPath(row: sectionItems.count, section: index)
+                tableView.insertRows(at: [indexPath], with: .fade)
+            }
+            
+            tableView.endUpdates()
+            tableView.setEditing(true, animated: true)
+        } else {
+            tableView.beginUpdates()
+            
+            for (index, sectionItems) in allItems.enumerated() {
+                let indexPath = IndexPath(row: sectionItems.count, section: index)
+                tableView.deleteRows(at: [indexPath], with: .fade)
+            }
+            
+            tableView.endUpdates()
+            tableView.setEditing(false, animated: true)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCellEditingStyle {
+        let sectionItems = allItems[indexPath.section]
+        if indexPath.row >= sectionItems.count {
+            return .insert
+        } else {
+            return .delete
         }
     }
     
