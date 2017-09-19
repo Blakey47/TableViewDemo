@@ -21,6 +21,7 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
         automaticallyAdjustsScrollViewInsets = false
         self.navigationItem.title = "Nature Pictures"
         navigationItem.rightBarButtonItem = editButtonItem
+        tableView.allowsSelectionDuringEditing = true
         
         for i in 1...12 {
             if i > 9 {
@@ -84,6 +85,10 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
         if editingStyle == .delete {
             allItems[indexPath.section].remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
+        } else if editingStyle == .insert {
+            let newData = DataItem(title: "New Data", subtitle: "", imageName: nil)
+            allItems[indexPath.section].append(newData)
+            tableView.insertRows(at: [indexPath], with: .fade)
         }
     }
     
@@ -119,6 +124,22 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
             return .insert
         } else {
             return .delete
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+        let sectionItems = allItems[indexPath.section]
+        if isEditing && indexPath.row < sectionItems.count {
+            return nil
+        }
+        return indexPath
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let sectionItems = allItems[indexPath.section]
+        if indexPath.row >= sectionItems.count && isEditing {
+            self.tableView(tableView, commit: .insert, forRowAt: indexPath)
         }
     }
     
